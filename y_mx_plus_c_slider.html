@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exploring y = mx + c</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:20px;color:#142033;background:white}
+.wrap{max-width:960px;margin:auto}
+h1{color:#0b7fb5;margin:0 0 8px}
+p{line-height:1.45}
+.layout{display:grid;grid-template-columns:1.5fr .8fr;gap:20px;align-items:start}
+.card{border:1px solid #d8dee8;border-radius:14px;padding:14px;background:#fff}
+.controls{display:grid;gap:14px}
+.panel{border:1px solid #d8dee8;border-radius:14px;padding:16px;background:#f6f8fb}
+label{font-weight:700}
+.value{float:right;font-weight:700;color:#0b7fb5}
+input[type=range]{width:100%;margin:10px 0}
+.ends{display:flex;justify-content:space-between;font-size:12px;color:#667085}
+.eq{font-family:Georgia,serif;font-size:30px;text-align:center}
+button{min-height:44px;border:0;border-radius:10px;background:#e8eef4;font-weight:700;font-size:16px;cursor:pointer}
+svg{width:100%;height:auto;display:block}
+@media(max-width:760px){.layout{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Exploring <em>y = mx + c</em></h1>
+<p>Move the sliders to see how <strong>m</strong> changes the gradient and how <strong>c</strong> changes the y-intercept.</p>
+<div class="layout">
+<div class="card">
+<svg id="graph" viewBox="0 0 640 640" role="img" aria-label="Graph of y equals mx plus c">
+<defs><clipPath id="clip"><rect x="55" y="35" width="550" height="550"/></clipPath></defs>
+<rect x="55" y="35" width="550" height="550" fill="white"/>
+<g id="grid"></g><g id="axes"></g><g id="ticks"></g>
+<g clip-path="url(#clip)">
+<line id="line" stroke="#0b7fb5" stroke-width="5" stroke-linecap="round"/>
+</g>
+<circle id="point" r="7" fill="#d7463b"/>
+<text id="plabel" font-size="18" fill="#d7463b">c</text>
+<text x="611" y="326" font-size="19">x</text>
+<text x="340" y="28" font-size="19">y</text>
+</svg>
+</div>
+
+<div class="controls">
+<div class="panel">
+<div><label for="m">Gradient, m</label><span class="value" id="mv">1.0</span></div>
+<input id="m" type="range" min="-5" max="5" step="0.1" value="1">
+<div class="ends"><span>-5</span><span>0</span><span>5</span></div>
+
+<div style="margin-top:18px"><label for="c">y-intercept, c</label><span class="value" id="cv">0.0</span></div>
+<input id="c" type="range" min="-10" max="10" step="0.5" value="0">
+<div class="ends"><span>-10</span><span>0</span><span>10</span></div>
+</div>
+
+<div class="panel">
+<div class="eq" id="eq">y = x</div>
+<p id="explain">The line rises from left to right and crosses the y-axis at 0.</p>
+</div>
+
+<div class="panel">
+<p><strong>Gradient:</strong> <span id="gf">1.0</span></p>
+<p><strong>y-intercept:</strong> <span id="cf">(0, 0)</span></p>
+<p><strong>Direction:</strong> <span id="df">Increasing</span></p>
+</div>
+
+<button id="reset" type="button">Reset to y = x</button>
+</div>
+</div>
+</div>
+
+<script>
+(function(){
+const grid=document.getElementById('grid'),axes=document.getElementById('axes'),ticks=document.getElementById('ticks');
+const m=document.getElementById('m'),c=document.getElementById('c'),line=document.getElementById('line');
+const point=document.getElementById('point'),plabel=document.getElementById('plabel');
+const mv=document.getElementById('mv'),cv=document.getElementById('cv'),eq=document.getElementById('eq');
+const explain=document.getElementById('explain'),gf=document.getElementById('gf'),cf=document.getElementById('cf'),df=document.getElementById('df');
+const reset=document.getElementById('reset');
+const L=55,T=35,S=550,xmin=-10,xmax=10,ymin=-10,ymax=10;
+const xp=x=>L+(x-xmin)/(xmax-xmin)*S;
+const yp=y=>T+S-(y-ymin)/(ymax-ymin)*S;
+function el(n,a){const e=document.createElementNS('http://www.w3.org/2000/svg',n);for(const k in a)e.setAttribute(k,a[k]);return e}
+for(let n=-10;n<=10;n++){
+ grid.appendChild(el('line',{x1:xp(n),y1:T,x2:xp(n),y2:T+S,stroke:n===0?'transparent':'#d9dee7','stroke-width':n%5===0?1.5:1}));
+ grid.appendChild(el('line',{x1:L,y1:yp(n),x2:L+S,y2:yp(n),stroke:n===0?'transparent':'#d9dee7','stroke-width':n%5===0?1.5:1}));
+}
+axes.appendChild(el('line',{x1:L,y1:yp(0),x2:L+S,y2:yp(0),stroke:'#202938','stroke-width':2.5}));
+axes.appendChild(el('line',{x1:xp(0),y1:T,x2:xp(0),y2:T+S,stroke:'#202938','stroke-width':2.5}));
+for(let n=-10;n<=10;n+=2){
+ if(n!==0){
+  let tx=el('text',{x:xp(n),y:yp(0)+22,'text-anchor':'middle','font-size':13,fill:'#596273'});tx.textContent=n;ticks.appendChild(tx);
+  let ty=el('text',{x:xp(0)-10,y:yp(n)+5,'text-anchor':'end','font-size':13,fill:'#596273'});ty.textContent=n;ticks.appendChild(ty);
+ }
+}
+let o=el('text',{x:xp(0)-10,y:yp(0)+22,'text-anchor':'end','font-size':13,fill:'#596273'});o.textContent='0';ticks.appendChild(o);
+
+function fmt(v){if(Math.abs(v)<1e-9)return'0'; if(Math.abs(v-Math.round(v))<1e-9)return String(Math.round(v)); return v.toFixed(1)}
+function eqn(mm,cc){
+ let a='';
+ if(Math.abs(mm)<1e-9)return'y = '+fmt(cc);
+ if(Math.abs(mm-1)<1e-9)a='x'; else if(Math.abs(mm+1)<1e-9)a='-x'; else a=fmt(mm)+'x';
+ if(Math.abs(cc)<1e-9)return'y = '+a;
+ return cc>0?'y = '+a+' + '+fmt(cc):'y = '+a+' - '+fmt(Math.abs(cc));
+}
+function ends(mm,cc){
+ const p=[];
+ function add(x,y){if(x>=xmin-1e-8&&x<=xmax+1e-8&&y>=ymin-1e-8&&y<=ymax+1e-8&&!p.some(q=>Math.abs(q.x-x)<1e-8&&Math.abs(q.y-y)<1e-8))p.push({x,y})}
+ add(xmin,mm*xmin+cc); add(xmax,mm*xmax+cc);
+ if(Math.abs(mm)>1e-9){add((ymin-cc)/mm,ymin);add((ymax-cc)/mm,ymax)}
+ return p.length>=2?[p[0],p[1]]:[{x:xmin,y:mm*xmin+cc},{x:xmax,y:mm*xmax+cc}];
+}
+function update(){
+ const mm=Number(m.value),cc=Number(c.value),p=ends(mm,cc);
+ line.setAttribute('x1',xp(p[0].x));line.setAttribute('y1',yp(p[0].y));
+ line.setAttribute('x2',xp(p[1].x));line.setAttribute('y2',yp(p[1].y));
+ mv.textContent=mm.toFixed(1);cv.textContent=cc.toFixed(1);eq.textContent=eqn(mm,cc);
+ const py=yp(cc);point.setAttribute('cx',xp(0));point.setAttribute('cy',py);plabel.setAttribute('x',xp(0)+12);plabel.setAttribute('y',py-10);
+ const vis=cc>=ymin&&cc<=ymax;point.style.display=vis?'':'none';plabel.style.display=vis?'':'none';
+ gf.textContent=mm.toFixed(1);cf.textContent='(0, '+fmt(cc)+')';
+ let d=mm>0?'Increasing':mm<0?'Decreasing':'Horizontal';df.textContent=d;
+ let s=mm>0?'The line rises from left to right. ':mm<0?'The line falls from left to right. ':'The line is horizontal. ';
+ explain.textContent=s+'It crosses the y-axis at '+fmt(cc)+'.';
+}
+m.addEventListener('input',update);c.addEventListener('input',update);
+reset.addEventListener('click',()=>{m.value=1;c.value=0;update()});
+update();
+})();
+</script>
+</body>
+</html>
