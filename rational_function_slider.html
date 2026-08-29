@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exploring y = (ax + b)/(cx + d)</title>
+<style>
+:root{--ink:#142033;--muted:#667085;--border:#d8dee8;--panel:#f6f8fb;--grid:#d9dee7;--axis:#202938;--curve:#0b7fb5;--asym:#d7463b;--hole:#7a4fb3}
+*{box-sizing:border-box}body{margin:0;padding:20px;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#fff}.wrap{max-width:1050px;margin:auto}h1{margin:0 0 8px;color:#0b7fb5;font-size:clamp(28px,4vw,44px);font-weight:650}.intro{margin:0 0 18px;color:var(--muted);line-height:1.5;font-size:16px}.layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(285px,.8fr);gap:20px;align-items:start}.card{border:1px solid var(--border);border-radius:14px;background:#fff}.graph-card{padding:12px}svg{display:block;width:100%;height:auto}.controls{display:grid;gap:14px}.panel{padding:15px;border:1px solid var(--border);border-radius:14px;background:var(--panel)}.slider-row+.slider-row{margin-top:14px}.slider-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline}label{font-weight:700}.value{font-weight:700;color:#0b7fb5;min-width:52px;text-align:right}input[type=range]{width:100%;margin:7px 0 2px}.ends{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}.equation{font-family:Georgia,"Times New Roman",serif;font-size:27px;line-height:1.25;text-align:center;margin:2px 0 10px}.facts{display:grid;gap:8px;font-size:14px}.fact{display:grid;grid-template-columns:1fr auto;gap:12px;border-bottom:1px solid #e5e9ef;padding-bottom:6px}.fact:last-child{border-bottom:0;padding-bottom:0}.note{margin:0;font-size:14px;line-height:1.5}.warning{color:#9a3412;font-weight:700}button{min-height:44px;border:0;border-radius:10px;background:#e8eef4;color:var(--ink);font-size:16px;font-weight:700;cursor:pointer}.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:13px;color:var(--muted)}.swatch{display:inline-block;width:22px;height:3px;margin-right:6px;vertical-align:middle;border-radius:2px}@media(max-width:780px){.layout{grid-template-columns:1fr}body{padding:14px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Exploring <em>y = (ax + b)/(cx + d)</em></h1>
+<p class="intro">Move the four sliders to investigate how the parameters affect the position and shape of this rational function. The graph automatically shows vertical and horizontal asymptotes when they exist.</p>
+<div class="layout">
+<section class="card graph-card">
+<svg id="graph" viewBox="0 0 660 660" role="img" aria-label="Interactive graph of y equals ax plus b divided by cx plus d">
+<defs><clipPath id="plotClip"><rect x="60" y="40" width="560" height="560"></rect></clipPath></defs>
+<rect x="60" y="40" width="560" height="560" fill="#fff"></rect><g id="grid"></g><g id="axes"></g><g id="ticks"></g>
+<g clip-path="url(#plotClip)">
+<line id="verticalAsymptote" stroke="#d7463b" stroke-width="2.2" stroke-dasharray="9 7" style="display:none"></line>
+<line id="horizontalAsymptote" stroke="#d7463b" stroke-width="2.2" stroke-dasharray="9 7" style="display:none"></line>
+<path id="curveLeft" fill="none" stroke="#0b7fb5" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></path>
+<path id="curveRight" fill="none" stroke="#0b7fb5" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></path>
+<circle id="hole" r="7" fill="#fff" stroke="#7a4fb3" stroke-width="3" style="display:none"></circle>
+</g>
+<text id="vLabel" font-size="15" fill="#d7463b" style="display:none"></text><text id="hLabel" font-size="15" fill="#d7463b" style="display:none"></text><text x="628" y="334" font-size="19">x</text><text x="350" y="30" font-size="19">y</text>
+</svg>
+<div class="legend"><span><span class="swatch" style="background:#0b7fb5"></span>Function</span><span><span class="swatch" style="background:#d7463b"></span>Asymptote</span><span><span class="swatch" style="background:#7a4fb3"></span>Removable hole</span></div>
+</section>
+<section class="controls">
+<div class="panel">
+<div class="slider-row"><div class="slider-head"><label for="aSlider">a</label><span class="value" id="aValue">1.0</span></div><input id="aSlider" type="range" min="-5" max="5" step="0.1" value="1"><div class="ends"><span>−5</span><span>0</span><span>5</span></div></div>
+<div class="slider-row"><div class="slider-head"><label for="bSlider">b</label><span class="value" id="bValue">0.0</span></div><input id="bSlider" type="range" min="-5" max="5" step="0.1" value="0"><div class="ends"><span>−5</span><span>0</span><span>5</span></div></div>
+<div class="slider-row"><div class="slider-head"><label for="cSlider">c</label><span class="value" id="cValue">1.0</span></div><input id="cSlider" type="range" min="-5" max="5" step="0.1" value="1"><div class="ends"><span>−5</span><span>0</span><span>5</span></div></div>
+<div class="slider-row"><div class="slider-head"><label for="dSlider">d</label><span class="value" id="dValue">1.0</span></div><input id="dSlider" type="range" min="-5" max="5" step="0.1" value="1"><div class="ends"><span>−5</span><span>0</span><span>5</span></div></div>
+</div>
+<div class="panel"><div class="equation" id="equationText">y = x/(x + 1)</div><p class="note" id="explanation" aria-live="polite"></p></div>
+<div class="panel facts"><div class="fact"><span>Vertical asymptote</span><strong id="vFact"></strong></div><div class="fact"><span>Horizontal asymptote</span><strong id="hFact"></strong></div><div class="fact"><span>x-intercept</span><strong id="xFact"></strong></div><div class="fact"><span>y-intercept</span><strong id="yFact"></strong></div></div>
+<button id="resetButton" type="button">Reset to y = x/(x + 1)</button>
+</section></div></div>
+<script>
+(function(){
+const grid=document.getElementById('grid'),axes=document.getElementById('axes'),ticks=document.getElementById('ticks');
+const sliders={a:document.getElementById('aSlider'),b:document.getElementById('bSlider'),c:document.getElementById('cSlider'),d:document.getElementById('dSlider')};
+const values={a:document.getElementById('aValue'),b:document.getElementById('bValue'),c:document.getElementById('cValue'),d:document.getElementById('dValue')};
+const curveLeft=document.getElementById('curveLeft'),curveRight=document.getElementById('curveRight'),vAsym=document.getElementById('verticalAsymptote'),hAsym=document.getElementById('horizontalAsymptote'),hole=document.getElementById('hole'),vLabel=document.getElementById('vLabel'),hLabel=document.getElementById('hLabel');
+const equationText=document.getElementById('equationText'),explanation=document.getElementById('explanation'),vFact=document.getElementById('vFact'),hFact=document.getElementById('hFact'),xFact=document.getElementById('xFact'),yFact=document.getElementById('yFact'),resetButton=document.getElementById('resetButton');
+const L=60,T=40,S=560,xMin=-10,xMax=10,yMin=-10,yMax=10;const xToPx=x=>L+(x-xMin)/(xMax-xMin)*S;const yToPx=y=>T+S-(y-yMin)/(yMax-yMin)*S;
+function el(n,a){const e=document.createElementNS('http://www.w3.org/2000/svg',n);for(const[k,v]of Object.entries(a))e.setAttribute(k,v);return e}
+for(let n=-10;n<=10;n++){grid.appendChild(el('line',{x1:xToPx(n),y1:T,x2:xToPx(n),y2:T+S,stroke:n===0?'transparent':'#d9dee7','stroke-width':n%5===0?1.5:1}));grid.appendChild(el('line',{x1:L,y1:yToPx(n),x2:L+S,y2:yToPx(n),stroke:n===0?'transparent':'#d9dee7','stroke-width':n%5===0?1.5:1}))}
+axes.appendChild(el('line',{x1:L,y1:yToPx(0),x2:L+S,y2:yToPx(0),stroke:'#202938','stroke-width':2.5}));axes.appendChild(el('line',{x1:xToPx(0),y1:T,x2:xToPx(0),y2:T+S,stroke:'#202938','stroke-width':2.5}));
+for(let n=-10;n<=10;n+=2){if(n!==0){let tx=el('text',{x:xToPx(n),y:yToPx(0)+21,'text-anchor':'middle','font-size':12,fill:'#596273'});tx.textContent=n;ticks.appendChild(tx);let ty=el('text',{x:xToPx(0)-9,y:yToPx(n)+4,'text-anchor':'end','font-size':12,fill:'#596273'});ty.textContent=n;ticks.appendChild(ty)}}let o=el('text',{x:xToPx(0)-9,y:yToPx(0)+21,'text-anchor':'end','font-size':12,fill:'#596273'});o.textContent='0';ticks.appendChild(o);
+const nearZero=n=>Math.abs(n)<1e-9;function fmt(n){if(nearZero(n))return'0';if(Math.abs(n-Math.round(n))<1e-9)return String(Math.round(n));return n.toFixed(2).replace(/0+$/,'').replace(/\.$/,'')}const pretty=n=>fmt(n).replace('-','−');
+function term(coeff,v,first){if(nearZero(coeff))return'';const ab=Math.abs(coeff),core=(Math.abs(ab-1)<1e-9?'':pretty(ab))+v;if(first)return coeff<0?'−'+core:core;return coeff<0?' − '+core:' + '+core}function con(val,first){if(nearZero(val))return'';if(first)return pretty(val);return val<0?' − '+pretty(Math.abs(val)):' + '+pretty(val)}function expr(a,b){let s=term(a,'x',true);s+=con(b,s==='');return s||'0'}function equation(a,b,c,d){return'y = ('+expr(a,b)+')/('+expr(c,d)+')'}
+function path(a,b,c,d,start,end){const N=700;let p='',drawing=false,prev=null;for(let i=0;i<=N;i++){const x=start+(end-start)*i/N,den=c*x+d;if(Math.abs(den)<1e-7){drawing=false;prev=null;continue}const y=(a*x+b)/den;if(!Number.isFinite(y)||y<yMin-5||y>yMax+5){drawing=false;prev=null;continue}if(prev!==null&&Math.abs(y-prev)>4)drawing=false;p+=(drawing?' L ':' M ')+xToPx(x).toFixed(2)+' '+yToPx(y).toFixed(2);drawing=true;prev=y}return p}
+function setLine(e,x1,y1,x2,y2,show){e.style.display=show?'':'none';if(show){e.setAttribute('x1',x1);e.setAttribute('y1',y1);e.setAttribute('x2',x2);e.setAttribute('y2',y2)}}
+function update(){const a=+sliders.a.value,b=+sliders.b.value,c=+sliders.c.value,d=+sliders.d.value;for(const k of['a','b','c','d'])values[k].textContent=(+sliders[k].value).toFixed(1);equationText.textContent=equation(a,b,c,d);hole.style.display='none';vLabel.style.display='none';hLabel.style.display='none';
+if(nearZero(c)&&nearZero(d)){curveLeft.setAttribute('d','');curveRight.setAttribute('d','');setLine(vAsym,0,0,0,0,false);setLine(hAsym,0,0,0,0,false);vFact.textContent='None';hFact.textContent='None';xFact.textContent='Undefined';yFact.textContent='Undefined';explanation.innerHTML='<span class="warning">The denominator is zero for every x, so the function is undefined.</span>';return}
+const det=a*d-b*c,hasV=!nearZero(c),xA=hasV?-d/c:null,yA=hasV?a/c:null,removable=hasV&&nearZero(det);
+if(hasV&&!removable&&xA>=xMin&&xA<=xMax){const px=xToPx(xA);setLine(vAsym,px,T,px,T+S,true);vLabel.style.display='';vLabel.setAttribute('x',Math.min(Math.max(px+7,L+5),L+S-80));vLabel.setAttribute('y',T+18);vLabel.textContent='x = '+pretty(xA)}else setLine(vAsym,0,0,0,0,false);
+if(hasV&&yA>=yMin&&yA<=yMax){const py=yToPx(yA);setLine(hAsym,L,py,L+S,py,true);hLabel.style.display='';hLabel.setAttribute('x',L+S-76);hLabel.setAttribute('y',Math.max(T+16,py-7));hLabel.textContent='y = '+pretty(yA)}else setLine(hAsym,0,0,0,0,false);
+if(removable){curveLeft.setAttribute('d',path(a,b,c,d,xMin,xA-0.002));curveRight.setAttribute('d',path(a,b,c,d,xA+0.002,xMax));if(xA>=xMin&&xA<=xMax&&yA>=yMin&&yA<=yMax){hole.style.display='';hole.setAttribute('cx',xToPx(xA));hole.setAttribute('cy',yToPx(yA))}}else if(hasV&&xA>xMin&&xA<xMax){curveLeft.setAttribute('d',path(a,b,c,d,xMin,xA-0.002));curveRight.setAttribute('d',path(a,b,c,d,xA+0.002,xMax))}else{curveLeft.setAttribute('d',path(a,b,c,d,xMin,xMax));curveRight.setAttribute('d','')}
+vFact.textContent=hasV?(removable?'Hole at x = '+pretty(xA):'x = '+pretty(xA)):'None';hFact.textContent=hasV?'y = '+pretty(yA):'None';
+if(!nearZero(a)){const xr=-b/a;xFact.textContent=hasV&&Math.abs(xr-xA)<1e-7?'None (hole)':'x = '+pretty(xr)}else xFact.textContent=nearZero(b)?'Every defined x':'None';yFact.textContent=!nearZero(d)?'y = '+pretty(b/d):'Undefined';
+if(removable)explanation.textContent='The numerator and denominator reduce to a constant value. The graph is the horizontal line y = '+pretty(yA)+' with a removable hole at x = '+pretty(xA)+'.';else if(hasV)explanation.textContent='The graph has a vertical asymptote at x = '+pretty(xA)+' and a horizontal asymptote at y = '+pretty(yA)+'. Changing the parameters moves these asymptotes and alters the two branches of the curve.';else explanation.textContent='Because c = 0, the denominator is constant, so the function is linear rather than a two-branch rational curve.'}
+Object.values(sliders).forEach(s=>s.addEventListener('input',update));resetButton.addEventListener('click',()=>{sliders.a.value='1';sliders.b.value='0';sliders.c.value='1';sliders.d.value='1';update()});update();
+})();
+</script>
+</body>
+</html>
