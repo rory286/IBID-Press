@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exploring y = ax² + bx + c</title>
+<style>
+  :root{
+    --ink:#142033;
+    --muted:#667085;
+    --border:#d8dee8;
+    --panel:#f6f8fb;
+    --grid:#d9dee7;
+    --axis:#202938;
+    --curve:#0b7fb5;
+    --accent:#0b7fb5;
+    --vertex:#d7463b;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    padding:20px;
+    font-family:Arial,Helvetica,sans-serif;
+    color:var(--ink);
+    background:#fff;
+  }
+  .wrap{max-width:1050px;margin:auto}
+  h1{
+    margin:0 0 8px;
+    color:var(--accent);
+    font-size:clamp(28px,4vw,44px);
+    font-weight:650;
+  }
+  .intro{
+    margin:0 0 18px;
+    color:var(--muted);
+    line-height:1.5;
+    font-size:16px;
+  }
+  .layout{
+    display:grid;
+    grid-template-columns:minmax(0,1.5fr) minmax(285px,.8fr);
+    gap:20px;
+    align-items:start;
+  }
+  .card{
+    border:1px solid var(--border);
+    border-radius:14px;
+    background:#fff;
+  }
+  .graph-card{padding:12px}
+  svg{display:block;width:100%;height:auto}
+  .controls{display:grid;gap:14px}
+  .panel{
+    padding:15px;
+    border:1px solid var(--border);
+    border-radius:14px;
+    background:var(--panel);
+  }
+  .slider-row + .slider-row{margin-top:14px}
+  .slider-head{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    align-items:baseline;
+  }
+  label{font-weight:700}
+  .value{
+    font-weight:700;
+    color:var(--accent);
+    min-width:52px;
+    text-align:right;
+  }
+  input[type=range]{width:100%;margin:7px 0 2px}
+  .ends{
+    display:flex;
+    justify-content:space-between;
+    font-size:11px;
+    color:var(--muted);
+  }
+  .equation{
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:28px;
+    line-height:1.25;
+    text-align:center;
+    margin:2px 0 10px;
+  }
+  .facts{
+    display:grid;
+    gap:8px;
+    font-size:14px;
+  }
+  .fact{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:12px;
+    border-bottom:1px solid #e5e9ef;
+    padding-bottom:6px;
+  }
+  .fact:last-child{border-bottom:0;padding-bottom:0}
+  .note{
+    margin:0;
+    font-size:14px;
+    line-height:1.5;
+  }
+  button{
+    min-height:44px;
+    border:0;
+    border-radius:10px;
+    background:#e8eef4;
+    color:var(--ink);
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  button:hover{background:#dfe8ef}
+  button:focus-visible,input:focus-visible{
+    outline:3px solid rgba(11,127,181,.28);
+    outline-offset:2px;
+  }
+  @media(max-width:780px){
+    .layout{grid-template-columns:1fr}
+    body{padding:14px}
+  }
+</style>
+</head>
+
+<body>
+<div class="wrap">
+  <h1>Exploring <em>y = ax² + bx + c</em></h1>
+  <p class="intro">
+    Move the sliders to investigate how <strong>a</strong>, <strong>b</strong> and <strong>c</strong>
+    affect the shape and position of a quadratic graph.
+  </p>
+
+  <div class="layout">
+    <section class="card graph-card">
+      <svg id="graph" viewBox="0 0 660 660" role="img"
+           aria-label="Interactive graph of y equals ax squared plus bx plus c">
+        <defs>
+          <clipPath id="plotClip">
+            <rect x="60" y="40" width="560" height="560"></rect>
+          </clipPath>
+        </defs>
+
+        <rect x="60" y="40" width="560" height="560" fill="#fff"></rect>
+        <g id="grid"></g>
+        <g id="axes"></g>
+        <g id="ticks"></g>
+
+        <g clip-path="url(#plotClip)">
+          <path id="curve" fill="none" stroke="#0b7fb5" stroke-width="4.5"
+                stroke-linecap="round" stroke-linejoin="round"></path>
+          <line id="axisSym" stroke="#d7463b" stroke-width="2"
+                stroke-dasharray="8 7" style="display:none"></line>
+          <circle id="vertex" r="7" fill="#d7463b" style="display:none"></circle>
+        </g>
+
+        <text id="axisLabel" font-size="15" fill="#d7463b" style="display:none"></text>
+        <text x="628" y="334" font-size="19" fill="#202938">x</text>
+        <text x="350" y="30" font-size="19" fill="#202938">y</text>
+      </svg>
+    </section>
+
+    <section class="controls">
+      <div class="panel">
+        <div class="slider-row">
+          <div class="slider-head"><label for="aSlider">a</label><span class="value" id="aValue">1.0</span></div>
+          <input id="aSlider" type="range" min="-5" max="5" step="0.1" value="1">
+          <div class="ends"><span>−5</span><span>0</span><span>5</span></div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-head"><label for="bSlider">b</label><span class="value" id="bValue">0.0</span></div>
+          <input id="bSlider" type="range" min="-10" max="10" step="0.5" value="0">
+          <div class="ends"><span>−10</span><span>0</span><span>10</span></div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-head"><label for="cSlider">c</label><span class="value" id="cValue">0.0</span></div>
+          <input id="cSlider" type="range" min="-10" max="10" step="0.5" value="0">
+          <div class="ends"><span>−10</span><span>0</span><span>10</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="equation" id="equationText">y = x²</div>
+        <p class="note" id="explanation" aria-live="polite">
+          The parabola opens upwards and has its vertex at the origin.
+        </p>
+      </div>
+
+      <div class="panel facts">
+        <div class="fact"><span>Opens</span><strong id="opensFact">Upwards</strong></div>
+        <div class="fact"><span>Axis of symmetry</span><strong id="axisFact">x = 0</strong></div>
+        <div class="fact"><span>Vertex</span><strong id="vertexFact">(0, 0)</strong></div>
+        <div class="fact"><span>y-intercept</span><strong id="yFact">(0, 0)</strong></div>
+        <div class="fact"><span>Discriminant</span><strong id="discFact">0</strong></div>
+      </div>
+
+      <button id="resetButton" type="button">Reset to y = x²</button>
+    </section>
+  </div>
+</div>
+
+<script>
+(function(){
+  const grid=document.getElementById("grid");
+  const axes=document.getElementById("axes");
+  const ticks=document.getElementById("ticks");
+
+  const aSlider=document.getElementById("aSlider");
+  const bSlider=document.getElementById("bSlider");
+  const cSlider=document.getElementById("cSlider");
+
+  const aValue=document.getElementById("aValue");
+  const bValue=document.getElementById("bValue");
+  const cValue=document.getElementById("cValue");
+
+  const curve=document.getElementById("curve");
+  const vertex=document.getElementById("vertex");
+  const axisSym=document.getElementById("axisSym");
+  const axisLabel=document.getElementById("axisLabel");
+
+  const equationText=document.getElementById("equationText");
+  const explanation=document.getElementById("explanation");
+  const opensFact=document.getElementById("opensFact");
+  const axisFact=document.getElementById("axisFact");
+  const vertexFact=document.getElementById("vertexFact");
+  const yFact=document.getElementById("yFact");
+  const discFact=document.getElementById("discFact");
+  const resetButton=document.getElementById("resetButton");
+
+  const L=60,T=40,S=560;
+  const xMin=-10,xMax=10,yMin=-10,yMax=10;
+
+  function xToPx(x){return L+(x-xMin)/(xMax-xMin)*S}
+  function yToPx(y){return T+S-(y-yMin)/(yMax-yMin)*S}
+
+  function makeSvgEl(name,attrs){
+    const e=document.createElementNS("http://www.w3.org/2000/svg",name);
+    Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));
+    return e;
+  }
+
+  for(let n=-10;n<=10;n++){
+    grid.appendChild(makeSvgEl("line",{
+      x1:xToPx(n),y1:T,x2:xToPx(n),y2:T+S,
+      stroke:n===0?"transparent":"#d9dee7",
+      "stroke-width":n%5===0?1.5:1
+    }));
+    grid.appendChild(makeSvgEl("line",{
+      x1:L,y1:yToPx(n),x2:L+S,y2:yToPx(n),
+      stroke:n===0?"transparent":"#d9dee7",
+      "stroke-width":n%5===0?1.5:1
+    }));
+  }
+
+  axes.appendChild(makeSvgEl("line",{
+    x1:L,y1:yToPx(0),x2:L+S,y2:yToPx(0),
+    stroke:"#202938","stroke-width":2.5
+  }));
+  axes.appendChild(makeSvgEl("line",{
+    x1:xToPx(0),y1:T,x2:xToPx(0),y2:T+S,
+    stroke:"#202938","stroke-width":2.5
+  }));
+
+  for(let n=-10;n<=10;n+=2){
+    if(n!==0){
+      const tx=makeSvgEl("text",{
+        x:xToPx(n),y:yToPx(0)+21,"text-anchor":"middle",
+        "font-size":12,fill:"#596273"
+      });
+      tx.textContent=n;ticks.appendChild(tx);
+
+      const ty=makeSvgEl("text",{
+        x:xToPx(0)-9,y:yToPx(n)+4,"text-anchor":"end",
+        "font-size":12,fill:"#596273"
+      });
+      ty.textContent=n;ticks.appendChild(ty);
+    }
+  }
+
+  const origin=makeSvgEl("text",{
+    x:xToPx(0)-9,y:yToPx(0)+21,"text-anchor":"end",
+    "font-size":12,fill:"#596273"
+  });
+  origin.textContent="0";ticks.appendChild(origin);
+
+  function nearZero(n){return Math.abs(n)<1e-9}
+  function fmt(n){
+    if(nearZero(n))return"0";
+    if(Math.abs(n-Math.round(n))<1e-9)return String(Math.round(n));
+    return n.toFixed(2).replace(/0+$/,"").replace(/\.$/,"");
+  }
+  function pretty(n){return fmt(n).replace("-","−")}
+
+  function equation(a,b,c){
+    let s="y = ";
+    if(nearZero(a)){
+      if(nearZero(b)) return "y = "+pretty(c);
+      if(Math.abs(b-1)<1e-9) s+="x";
+      else if(Math.abs(b+1)<1e-9) s+="−x";
+      else s+=pretty(b)+"x";
+      if(!nearZero(c)) s+=c>0?" + "+pretty(c):" − "+pretty(Math.abs(c));
+      return s;
+    }
+
+    if(Math.abs(a-1)<1e-9) s+="x²";
+    else if(Math.abs(a+1)<1e-9) s+="−x²";
+    else s+=pretty(a)+"x²";
+
+    if(!nearZero(b)){
+      if(b>0) s+=" + "+(Math.abs(b-1)<1e-9?"x":pretty(b)+"x");
+      else s+=" − "+(Math.abs(b+1)<1e-9?"x":pretty(Math.abs(b))+"x");
+    }
+
+    if(!nearZero(c)) s+=c>0?" + "+pretty(c):" − "+pretty(Math.abs(c));
+    return s;
+  }
+
+  function drawCurve(a,b,c){
+    const N=900;
+    let path="";
+    let drawing=false;
+    let prevY=null;
+
+    for(let i=0;i<=N;i++){
+      const x=xMin+(xMax-xMin)*i/N;
+      const y=a*x*x+b*x+c;
+
+      if(!Number.isFinite(y)||y<yMin-5||y>yMax+5){
+        drawing=false;prevY=null;continue;
+      }
+
+      if(prevY!==null&&Math.abs(y-prevY)>3)drawing=false;
+
+      const px=xToPx(x),py=yToPx(y);
+      path+=(drawing?" L ":" M ")+px.toFixed(2)+" "+py.toFixed(2);
+      drawing=true;
+      prevY=y;
+    }
+    curve.setAttribute("d",path);
+  }
+
+  function update(){
+    const a=Number(aSlider.value);
+    const b=Number(bSlider.value);
+    const c=Number(cSlider.value);
+
+    aValue.textContent=a.toFixed(1);
+    bValue.textContent=b.toFixed(1);
+    cValue.textContent=c.toFixed(1);
+
+    equationText.textContent=equation(a,b,c);
+    drawCurve(a,b,c);
+
+    yFact.textContent="(0, "+pretty(c)+")";
+    const disc=b*b-4*a*c;
+    discFact.textContent=pretty(disc);
+
+    if(nearZero(a)){
+      vertex.style.display="none";
+      axisSym.style.display="none";
+      axisLabel.style.display="none";
+      opensFact.textContent="Not a parabola";
+      axisFact.textContent="None";
+      vertexFact.textContent="None";
+
+      if(nearZero(b)){
+        explanation.textContent="When a = 0 and b = 0, the graph is the horizontal line y = "+pretty(c)+".";
+      }else{
+        explanation.textContent="When a = 0, the quadratic term disappears and the graph becomes a straight line.";
+      }
+      return;
+    }
+
+    const xv=-b/(2*a);
+    const yv=a*xv*xv+b*xv+c;
+
+    opensFact.textContent=a>0?"Upwards":"Downwards";
+    axisFact.textContent="x = "+pretty(xv);
+    vertexFact.textContent="("+pretty(xv)+", "+pretty(yv)+")";
+
+    if(xv>=xMin&&xv<=xMax){
+      axisSym.style.display="";
+      axisSym.setAttribute("x1",xToPx(xv));
+      axisSym.setAttribute("x2",xToPx(xv));
+      axisSym.setAttribute("y1",T);
+      axisSym.setAttribute("y2",T+S);
+
+      axisLabel.style.display="";
+      axisLabel.setAttribute("x",Math.min(Math.max(xToPx(xv)+7,L+5),L+S-90));
+      axisLabel.setAttribute("y",T+18);
+      axisLabel.textContent="x = "+pretty(xv);
+    }else{
+      axisSym.style.display="none";
+      axisLabel.style.display="none";
+    }
+
+    if(xv>=xMin&&xv<=xMax&&yv>=yMin&&yv<=yMax){
+      vertex.style.display="";
+      vertex.setAttribute("cx",xToPx(xv));
+      vertex.setAttribute("cy",yToPx(yv));
+    }else{
+      vertex.style.display="none";
+    }
+
+    let shapeText;
+    if(Math.abs(a)<1) shapeText="The parabola is relatively wide.";
+    else if(Math.abs(a)>1) shapeText="The parabola is relatively narrow.";
+    else shapeText="The parabola has the standard width of y = x².";
+
+    let rootText;
+    if(disc>1e-9) rootText=" It crosses the x-axis twice.";
+    else if(Math.abs(disc)<=1e-9) rootText=" It touches the x-axis once.";
+    else rootText=" It does not cross the x-axis.";
+
+    explanation.textContent=
+      "The parabola opens "+(a>0?"upwards":"downwards")+
+      ". Its axis of symmetry is x = "+pretty(xv)+
+      " and its vertex is ("+pretty(xv)+", "+pretty(yv)+"). "+
+      shapeText+rootText;
+  }
+
+  aSlider.addEventListener("input",update);
+  bSlider.addEventListener("input",update);
+  cSlider.addEventListener("input",update);
+
+  resetButton.addEventListener("click",()=>{
+    aSlider.value="1";
+    bSlider.value="0";
+    cSlider.value="0";
+    update();
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>
