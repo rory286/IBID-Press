@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rolling a Die — Experimental Probability</title>
+<style>
+body{font-family:Georgia,serif;margin:0;background:#fff;color:#18324a}.wrap{max-width:1050px;margin:auto;padding:22px}
+h1{margin:0 0 6px}.intro{color:#667788;margin-bottom:18px}.grid{display:grid;grid-template-columns:280px 1fr;gap:18px}
+.card{border:1px solid #d7e1e8;border-radius:14px;padding:16px}.side{background:#f7fafc}.title{font-weight:700;font-size:18px;margin-bottom:12px}
+.die{width:140px;height:140px;margin:12px auto 18px;border:2px solid #263747;border-radius:20px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:20px}
+.pip{width:20px;height:20px;border-radius:50%;background:#263747;place-self:center;visibility:hidden}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#fff;border:1px solid #d7e1e8;border-radius:10px;padding:10px}
+.stat b{display:block;font:12px Arial;color:#667788}.stat span{font-size:22px;font-weight:700}.wide{grid-column:1/-1}
+.controls{display:grid;gap:9px;margin-top:12px}button{min-height:44px;border-radius:10px;border:1px solid #2f78b7;background:#fff;font:600 15px Arial;color:#18324a}
+button.primary{background:#2f78b7;color:#fff}.recent{display:flex;gap:7px;flex-wrap:wrap;min-height:42px}.mini{width:34px;height:34px;border:1px solid #d7e1e8;border-radius:8px;display:flex;align-items:center;justify-content:center;font:700 16px Arial}
+.mini.six{background:#eaf4fb;border:2px solid #2f78b7;color:#2f78b7}.chartbox{height:330px}svg{width:100%;height:100%;display:block}
+.note{font:13px Arial;color:#667788;margin-top:8px}.message{margin-top:16px;border-left:4px solid #2f78b7;background:#f7fafc;padding:12px 14px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.side{order:-1}}
+</style>
+</head>
+<body><div class="wrap">
+<h1>Rolling a die</h1><div class="intro">Watch the experimental probability of rolling a six develop as the number of rolls increases.</div>
+<div class="grid">
+<div class="card side"><div class="title">Current roll</div>
+<div id="die" class="die"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+<div class="stats">
+<div class="stat"><b>Number of rolls</b><span id="rolls">0</span></div>
+<div class="stat"><b>Number of sixes</b><span id="sixes">0</span></div>
+<div class="stat wide"><b>Experimental probability of a six</b><span id="prob">—</span></div>
+</div>
+<div class="controls"><button id="r1" class="primary">Roll once</button><button id="r10">Roll 10 times</button><button id="r100">Roll 100 times</button><button id="reset">Reset</button></div>
+</div>
+<div class="card"><div class="title">Most recent rolls</div><div id="recent" class="recent"></div><div class="note">The most recent 20 rolls are shown. Sixes are highlighted.</div>
+<div class="title" style="margin-top:18px">Experimental probability as the number of rolls increases</div><div class="chartbox"><svg id="chart" viewBox="0 0 760 330"></svg></div>
+<div class="note">Blue: experimental probability &nbsp;&nbsp; Gold dashed line: theoretical probability = 1/6</div>
+</div></div>
+<div class="message">At first the experimental probability may vary considerably. As the number of rolls becomes large, it tends to settle nearer the theoretical probability of <b>1/6 ≈ 0.167</b>.</div>
+</div>
+<script>
+(function(){
+const NS="http://www.w3.org/2000/svg";let outcomes=[],sixes=0,history=[];
+const pips=[...document.querySelectorAll(".pip")];
+const maps={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+function showDie(n){pips.forEach((p,i)=>p.style.visibility=maps[n].includes(i)?"visible":"hidden")}
+function rollOne(){let n=Math.floor(Math.random()*6)+1;outcomes.push(n);if(n===6)sixes++;history.push({n:outcomes.length,p:sixes/outcomes.length});showDie(n)}
+function batch(k){for(let i=0;i<k;i++)rollOne();refresh()}
+function refresh(){
+rolls.textContent=outcomes.length;sixesEl.textContent=sixes;prob.textContent=outcomes.length?(sixes/outcomes.length).toFixed(3):"—";
+recent.innerHTML="";outcomes.slice(-20).forEach(n=>{let d=document.createElement("div");d.className="mini"+(n===6?" six":"");d.textContent=n;recent.appendChild(d)});draw()}
+const rolls=document.getElementById("rolls"),sixesEl=document.getElementById("sixes"),prob=document.getElementById("prob"),recent=document.getElementById("recent");
+function resetAll(){outcomes=[];sixes=0;history=[];showDie(1);refresh()}
+function draw(){
+const svg=document.getElementById("chart");while(svg.firstChild)svg.removeChild(svg.firstChild);
+const W=760,H=330,m={l:55,r:20,t:15,b:42},iw=W-m.l-m.r,ih=H-m.t-m.b,xmax=Math.max(20,outcomes.length);
+const X=x=>m.l+x/xmax*iw,Y=y=>m.t+(1-y)*ih;
+function add(tag,a,t){let e=document.createElementNS(NS,tag);for(let k in a)e.setAttribute(k,a[k]);if(t!=null)e.textContent=t;svg.appendChild(e)}
+[0,.2,.4,.6,.8,1].forEach(v=>{add("line",{x1:m.l,y1:Y(v),x2:W-m.r,y2:Y(v),stroke:"#e7edf2"});add("text",{x:m.l-8,y:Y(v)+4,"text-anchor":"end","font-size":"12","font-family":"Arial",fill:"#667788"},v.toFixed(1))});
+let ticks=xmax<=20?[0,5,10,15,20]:xmax<=100?[0,20,40,60,80,100]:[0,Math.round(xmax/4),Math.round(xmax/2),Math.round(3*xmax/4),xmax];
+ticks.forEach(v=>{add("line",{x1:X(v),y1:m.t,x2:X(v),y2:H-m.b,stroke:"#f0f3f6"});add("text",{x:X(v),y:H-m.b+20,"text-anchor":"middle","font-size":"12","font-family":"Arial",fill:"#667788"},v)});
+add("line",{x1:m.l,y1:H-m.b,x2:W-m.r,y2:H-m.b,stroke:"#18324a","stroke-width":"1.2"});add("line",{x1:m.l,y1:m.t,x2:m.l,y2:H-m.b,stroke:"#18324a","stroke-width":"1.2"});
+add("text",{x:m.l+iw/2,y:H-8,"text-anchor":"middle","font-size":"13","font-family":"Arial",fill:"#52677a"},"Number of rolls");
+add("line",{x1:m.l,y1:Y(1/6),x2:W-m.r,y2:Y(1/6),stroke:"#d3a64b","stroke-width":"2","stroke-dasharray":"7 5"});
+add("text",{x:W-m.r-4,y:Y(1/6)-7,"text-anchor":"end","font-size":"12","font-family":"Arial",fill:"#8e6e2e"},"1/6");
+if(history.length){let pts=history.map(d=>X(d.n)+","+Y(d.p)).join(" ");add("polyline",{points:pts,fill:"none",stroke:"#2f78b7","stroke-width":"2.5"});let q=history[history.length-1];add("circle",{cx:X(q.n),cy:Y(q.p),r:4,fill:"#2f78b7"})}}
+document.getElementById("r1").onclick=()=>batch(1);document.getElementById("r10").onclick=()=>batch(10);document.getElementById("r100").onclick=()=>batch(100);document.getElementById("reset").onclick=resetAll;resetAll();
+})();
+</script></body></html>
