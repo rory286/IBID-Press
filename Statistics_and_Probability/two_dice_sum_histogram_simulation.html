@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rolling Two Dice — Distribution of the Sum</title>
+<style>
+:root{--ink:#18324a;--muted:#667788;--line:#d7e1e8;--blue:#2f78b7;--soft:#eaf4fb;--panel:#f7fafc}
+*{box-sizing:border-box}body{font-family:Georgia,"Times New Roman",serif;margin:0;background:#fff;color:var(--ink)}.wrap{max-width:1120px;margin:auto;padding:22px}h1{margin:0 0 6px;font-size:clamp(28px,3vw,40px)}.intro{color:var(--muted);margin:0 0 18px;font-size:17px}.grid{display:grid;grid-template-columns:320px 1fr;gap:18px;align-items:start}.card{border:1px solid var(--line);border-radius:14px;padding:16px;background:#fff}.side{background:var(--panel)}.title{font-weight:700;font-size:18px;margin-bottom:12px}.dice-row{display:flex;justify-content:center;gap:16px;margin:8px 0 14px}.die{width:118px;height:118px;border:2px solid #263747;border-radius:18px;background:#fff;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:17px;box-shadow:0 3px 10px rgba(0,0,0,.06)}.pip{width:17px;height:17px;border-radius:50%;background:#263747;place-self:center;visibility:hidden}.sum-box{text-align:center;margin:6px 0 12px}.sum-box b{display:block;font:12px Arial,sans-serif;color:var(--muted);margin-bottom:3px}.sum-box span{font-size:34px;font-weight:700}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px}.stat b{display:block;font:12px Arial,sans-serif;color:var(--muted);margin-bottom:3px}.stat span{font-size:22px;font-weight:700}.controls{display:grid;gap:9px;margin-top:12px}button{min-height:44px;border-radius:10px;border:1px solid var(--blue);background:#fff;color:var(--ink);font:600 15px Arial,sans-serif;cursor:pointer}button.primary{background:var(--blue);color:#fff}.recent{display:flex;gap:7px;flex-wrap:wrap;min-height:42px}.mini{width:36px;height:34px;border:1px solid var(--line);border-radius:8px;display:flex;align-items:center;justify-content:center;font:700 15px Arial,sans-serif;background:#fff}.chartbox{height:365px;margin-top:4px}svg{width:100%;height:100%;display:block}.note{font:13px Arial,sans-serif;color:var(--muted);margin-top:8px;line-height:1.4}.table-wrap{overflow-x:auto;margin-top:16px}table{border-collapse:collapse;width:100%;min-width:620px;font:13px Arial,sans-serif}th,td{border:1px solid var(--line);padding:7px 8px;text-align:center}th{background:#f2f6f9}.message{margin-top:16px;border-left:4px solid var(--blue);background:var(--panel);padding:12px 14px;font-size:16px;line-height:1.45}@media(max-width:800px){.grid{grid-template-columns:1fr}.side{order:-1}}@media(max-width:430px){.die{width:96px;height:96px;padding:14px}.pip{width:14px;height:14px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Rolling two dice</h1>
+<p class="intro">Watch the distribution of the sum develop as two ordinary six-sided dice are rolled repeatedly.</p>
+<div class="grid">
+<aside class="card side">
+<div class="title">Current roll</div>
+<div class="dice-row">
+<div id="die1" class="die" aria-label="First die showing 1"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+<div id="die2" class="die" aria-label="Second die showing 1"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+</div>
+<div class="sum-box"><b>Sum</b><span id="currentSum">2</span></div>
+<div class="stats"><div class="stat"><b>Number of rolls</b><span id="rolls">0</span></div><div class="stat"><b>Most frequent sum</b><span id="mode">—</span></div></div>
+<div class="controls"><button id="r1" class="primary" type="button">Roll once</button><button id="r10" type="button">Roll 10 times</button><button id="r100" type="button">Roll 100 times</button><button id="reset" type="button">Reset</button></div>
+</aside>
+<section class="card">
+<div class="title">Most recent sums</div><div id="recent" class="recent" aria-live="polite"></div><div class="note">The most recent 20 sums are shown.</div>
+<div class="title" style="margin-top:18px">Histogram of the sum of the two dice</div><div class="chartbox"><svg id="chart" viewBox="0 0 760 365" role="img" aria-label="Histogram of sums obtained by rolling two dice"></svg></div>
+<div class="note">Each bar shows the frequency with which that sum has occurred.</div>
+<div class="table-wrap"><table aria-label="Frequency and experimental probability table"><thead><tr><th>Sum</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th></tr></thead><tbody><tr id="freqRow"><th>Frequency</th></tr><tr id="probRow"><th>Experimental probability</th></tr></tbody></table></div>
+</section>
+</div>
+<div class="message">The possible sums are not equally likely. As more rolls are made, the histogram tends to develop a peak near <b>7</b>, because more pairs of dice scores produce 7 than any other sum.</div>
+</div>
+<script>
+(function(){
+const NS="http://www.w3.org/2000/svg",sums=Array.from({length:11},(_,i)=>i+2);let outcomes=[],counts=Object.fromEntries(sums.map(s=>[s,0]));
+const maps={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+function showDie(id,n){const die=document.getElementById(id);[...die.querySelectorAll('.pip')].forEach((p,i)=>p.style.visibility=maps[n].includes(i)?'visible':'hidden');die.setAttribute('aria-label',(id==='die1'?'First':'Second')+' die showing '+n)}
+function oneRoll(){const a=Math.floor(Math.random()*6)+1,b=Math.floor(Math.random()*6)+1,s=a+b;outcomes.push({a,b,s});counts[s]++;showDie('die1',a);showDie('die2',b);document.getElementById('currentSum').textContent=s}
+function batch(k){for(let i=0;i<k;i++)oneRoll();refresh()}
+function resetAll(){outcomes=[];counts=Object.fromEntries(sums.map(s=>[s,0]));showDie('die1',1);showDie('die2',1);document.getElementById('currentSum').textContent='2';refresh()}
+function refresh(){document.getElementById('rolls').textContent=outcomes.length;const maxCount=Math.max(...sums.map(s=>counts[s]));document.getElementById('mode').textContent=maxCount===0?'—':sums.filter(s=>counts[s]===maxCount).join(', ');const recent=document.getElementById('recent');recent.innerHTML='';outcomes.slice(-20).forEach(o=>{const d=document.createElement('div');d.className='mini';d.textContent=o.s;d.title=`${o.a} + ${o.b} = ${o.s}`;recent.appendChild(d)});const fr=document.getElementById('freqRow'),pr=document.getElementById('probRow');while(fr.children.length>1)fr.removeChild(fr.lastChild);while(pr.children.length>1)pr.removeChild(pr.lastChild);sums.forEach(s=>{let a=document.createElement('td');a.textContent=counts[s];fr.appendChild(a);let b=document.createElement('td');b.textContent=outcomes.length?(counts[s]/outcomes.length).toFixed(3):'—';pr.appendChild(b)});drawChart()}
+function drawChart(){const svg=document.getElementById('chart');while(svg.firstChild)svg.removeChild(svg.firstChild);const W=760,H=365,m={l:60,r:20,t:16,b:52},iw=W-m.l-m.r,ih=H-m.t-m.b,ymax=Math.max(5,Math.max(...sums.map(s=>counts[s]))),niceMax=Math.ceil(ymax/5)*5,Y=v=>m.t+(niceMax-v)/niceMax*ih,barW=iw/11*.72;function add(tag,a,t){const e=document.createElementNS(NS,tag);Object.entries(a||{}).forEach(([k,v])=>e.setAttribute(k,v));if(t!=null)e.textContent=t;svg.appendChild(e)}for(let i=0;i<=5;i++){const v=niceMax*i/5,y=Y(v);add('line',{x1:m.l,y1:y,x2:W-m.r,y2:y,stroke:'#e7edf2'});add('text',{x:m.l-8,y:y+4,'text-anchor':'end','font-size':'12','font-family':'Arial',fill:'#667788'},Math.round(v))}add('line',{x1:m.l,y1:H-m.b,x2:W-m.r,y2:H-m.b,stroke:'#18324a','stroke-width':'1.2'});add('line',{x1:m.l,y1:m.t,x2:m.l,y2:H-m.b,stroke:'#18324a','stroke-width':'1.2'});add('text',{x:m.l+iw/2,y:H-10,'text-anchor':'middle','font-size':'13','font-family':'Arial',fill:'#52677a'},'Sum of the two dice');add('text',{x:16,y:m.t+ih/2,transform:`rotate(-90 16 ${m.t+ih/2})`,'text-anchor':'middle','font-size':'13','font-family':'Arial',fill:'#52677a'},'Frequency');sums.forEach((s,i)=>{const cx=m.l+(i+.5)*(iw/11),h=counts[s]/niceMax*ih,x=cx-barW/2,y=H-m.b-h;add('rect',{x,y,width:barW,height:h,fill:'#2f78b7',rx:'2'});add('text',{x:cx,y:H-m.b+20,'text-anchor':'middle','font-size':'12','font-family':'Arial',fill:'#667788'},s);if(counts[s]>0)add('text',{x:cx,y:Math.max(m.t+12,y-6),'text-anchor':'middle','font-size':'11','font-family':'Arial',fill:'#18324a'},counts[s])})}
+document.getElementById('r1').addEventListener('click',()=>batch(1));document.getElementById('r10').addEventListener('click',()=>batch(10));document.getElementById('r100').addEventListener('click',()=>batch(100));document.getElementById('reset').addEventListener('click',resetAll);resetAll();
+})();
+</script>
+</body></html>
