@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cubic Distance–Time Graph</title>
+<style>
+  body{font-family:Arial,Helvetica,sans-serif;margin:0;background:#f7f7f7;color:#222}
+  .wrap{max-width:1050px;margin:24px auto;padding:0 18px}
+  h1{font-size:24px;margin:0 0 8px}
+  .sub{margin:0 0 18px;color:#555}
+  .panel{background:white;border:1px solid #ddd;border-radius:10px;padding:16px;margin-bottom:16px}
+  .controls{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:18px}
+  .control label{display:flex;justify-content:space-between;font-weight:600;margin-bottom:6px}
+  input[type=range]{width:100%}
+  canvas{display:block;width:100%;height:540px;background:white;border:1px solid #ddd;border-radius:8px}
+  .equation{font-size:18px;text-align:center;margin-top:12px}
+  .note{font-size:13px;color:#666;margin-top:8px;text-align:center}
+  .speedbox{margin:16px auto 0;max-width:520px;text-align:center}
+  .speedtitle{font-weight:700;margin-bottom:6px}
+  #speedometer{width:100%;height:190px;display:block}
+  .speedreadout{font-size:20px;font-weight:700;margin-top:-8px}
+  .direction{font-size:14px;color:#555;margin-top:3px}
+  @media(max-width:700px){.controls{grid-template-columns:1fr}canvas{height:430px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Cubic distance–time graph</h1>
+  <p class="sub">Move the three sliders to change the time-axis intercepts. The vertical scale adjusts automatically so the whole cubic is visible.</p>
+
+  <div class="panel controls">
+    <div class="control">
+      <label><span>Intercept a</span><span id="av">2.0</span></label>
+      <input id="a" type="range" min="0" max="10" step="0.1" value="2">
+    </div>
+    <div class="control">
+      <label><span>Intercept b</span><span id="bv">5.0</span></label>
+      <input id="b" type="range" min="0" max="10" step="0.1" value="5">
+    </div>
+    <div class="control">
+      <label><span>Intercept c</span><span id="cv">8.0</span></label>
+      <input id="c" type="range" min="0" max="10" step="0.1" value="8">
+    </div>
+    <div class="control">
+      <label><span>Moving point time t</span><span id="tv">4.0</span></label>
+      <input id="tpoint" type="range" min="0" max="10" step="0.1" value="4">
+    </div>
+  </div>
+
+  <canvas id="graph"></canvas>
+  <div class="equation" id="eq"></div>
+  <div class="note">Graph shown for 0 ≤ t ≤ 10. Function: d(t) = (t − a)(t − b)(t − c).</div>
+  <div class="speedbox">
+    <div class="speedtitle">Instantaneous velocity (gradient)</div>
+    <canvas id="speedometer"></canvas>
+    <div class="speedreadout" id="speedreadout">0.00</div>
+    <div class="direction" id="direction"></div>
+  </div>
+</div>
+
+<script>
+const canvas=document.getElementById('graph'), ctx=canvas.getContext('2d');
+const speedCanvas=document.getElementById('speedometer'), sctx=speedCanvas.getContext('2d');
+const sliders=['a','b','c'].map(id=>document.getElementById(id));
+const vals=['av','bv','cv'].map(id=>document.getElementById(id));
+const tSlider=document.getElementById('tpoint'), tVal=document.getElementById('tv');
+
+function resize(){
+  const r=canvas.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+  canvas.width=Math.round(r.width*dpr); canvas.height=Math.round(r.height*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const sr=speedCanvas.getBoundingClientRect();
+  speedCanvas.width=Math.round(sr.width*dpr); speedCanvas.height=Math.round(sr.height*dpr);
+  sctx.setTransform(dpr,0,0,dpr,0,0);
+  draw();
+}
+function niceCeil(x){
+  if(x<=0) return 1;
+  const p=Math.pow(10,Math.floor(Math.log10(x)));
+  const n=x/p;
+  const m=n<=1?1:n<=2?2:n<=5?5:10;
+  return m*p;
+}
+function draw(){
+  const W=canvas.clientWidth,H=canvas.clientHeight;
+  const a=+sliders[0].value,b=+sliders[1].value,c=+sliders[2].value;
+  vals[0].textContent=a.toFixed(1); vals[1].textContent=b.toFixed(1); vals[2].textContent=c.toFixed(1);
+  const tp=+tSlider.value; tVal.textContent=tp.toFixed(1);
+  document.getElementById('eq').innerHTML =
+    `d(t) = (t − ${a.toFixed(1)})(t − ${b.toFixed(1)})(t − ${c.toFixed(1)})`;
+
+  const f=t=>(t-a)*(t-b)*(t-c);
+  let ymin=Infinity,ymax=-Infinity;
+  for(let i=0;i<=1000;i++){const y=f(10*i/1000); ymin=Math.min(ymin,y); ymax=Math.max(ymax,y);}
+  let M=Math.max(Math.abs(ymin),Math.abs(ymax));
+  M=niceCeil(M*1.12 || 1);
+  const L=70,R=25,T=25,B=55, pw=W-L-R, ph=H-T-B;
+  const X=t=>L+(t/10)*pw, Y=y=>T+(M-y)/(2*M)*ph;
+
+  ctx.clearRect(0,0,W,H);
+  ctx.font='12px Arial'; ctx.lineWidth=1;
+
+  // grid and x ticks
+  ctx.strokeStyle='#e5e5e5'; ctx.fillStyle='#555';
+  for(let t=0;t<=10;t++){
+    const x=X(t); ctx.beginPath();ctx.moveTo(x,T);ctx.lineTo(x,H-B);ctx.stroke();
+    ctx.textAlign='center';ctx.fillText(t,x,H-B+20);
+  }
+  // horizontal grid
+  for(let k=-4;k<=4;k++){
+    const yv=M*k/4, y=Y(yv);
+    ctx.beginPath();ctx.moveTo(L,y);ctx.lineTo(W-R,y);ctx.stroke();
+    ctx.textAlign='right';ctx.textBaseline='middle';
+    ctx.fillText(Number(yv.toPrecision(4)),L-8,y);
+  }
+
+  // axes
+  ctx.strokeStyle='#222';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(L,Y(0));ctx.lineTo(W-R,Y(0));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(L,T);ctx.lineTo(L,H-B);ctx.stroke();
+
+  // labels
+  ctx.fillStyle='#222';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+  ctx.font='14px Arial';ctx.fillText('time, t',L+pw/2,H-12);
+  ctx.save();ctx.translate(18,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText('distance, d',0,0);ctx.restore();
+
+  // curve
+  ctx.strokeStyle='#1769aa';ctx.lineWidth=3;ctx.beginPath();
+  for(let i=0;i<=900;i++){
+    const t=10*i/900,y=f(t),x=X(t),py=Y(y);
+    if(i===0)ctx.moveTo(x,py);else ctx.lineTo(x,py);
+  } ctx.stroke();
+
+  // tangent at the moving point
+  const slope = 3*tp*tp - 2*(a+b+c)*tp + (a*b+a*c+b*c);
+  const dp = f(tp);
+  const tangent = t => dp + slope*(t-tp);
+  ctx.save();
+  ctx.beginPath(); ctx.rect(L,T,pw,ph); ctx.clip();
+  ctx.strokeStyle='#8e44ad'; ctx.lineWidth=2; ctx.setLineDash([8,6]);
+  ctx.beginPath(); ctx.moveTo(X(0),Y(tangent(0))); ctx.lineTo(X(10),Y(tangent(10))); ctx.stroke();
+  ctx.restore(); ctx.setLineDash([]);
+
+  // intercept markers
+  ctx.fillStyle='#c62828';
+  [a,b,c].forEach(t=>{ctx.beginPath();ctx.arc(X(t),Y(0),5,0,2*Math.PI);ctx.fill();});
+
+  // independently controlled moving point on the cubic
+  ctx.fillStyle='#16803a';
+  ctx.beginPath(); ctx.arc(X(tp),Y(dp),7,0,2*Math.PI); ctx.fill();
+  ctx.strokeStyle='#ffffff'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(X(tp),Y(dp),7,0,2*Math.PI); ctx.stroke();
+
+  drawSpeedometer(slope, a, b, c);
+}
+
+function drawSpeedometer(v,a,b,c){
+  const W=speedCanvas.clientWidth,H=speedCanvas.clientHeight;
+  sctx.clearRect(0,0,W,H);
+  // Determine a symmetric velocity range large enough for the current cubic over 0..10.
+  const deriv=t=>3*t*t-2*(a+b+c)*t+(a*b+a*c+b*c);
+  let vmax=1;
+  for(let i=0;i<=500;i++) vmax=Math.max(vmax,Math.abs(deriv(10*i/500)));
+  vmax=niceCeil(vmax*1.05);
+
+  const cx=W/2, cy=H*0.82, radius=Math.min(W*0.38,H*0.70);
+  const start=Math.PI, end=2*Math.PI;
+
+  // arc
+  sctx.strokeStyle='#bbb'; sctx.lineWidth=14; sctx.lineCap='round';
+  sctx.beginPath(); sctx.arc(cx,cy,radius,start,end); sctx.stroke();
+
+  // ticks and labels
+  sctx.lineCap='butt'; sctx.font='12px Arial'; sctx.fillStyle='#555';
+  for(let i=0;i<=10;i++){
+    const ang=start+(end-start)*i/10;
+    const r1=radius-13, r2=radius+3;
+    sctx.strokeStyle='#555'; sctx.lineWidth=(i===5?2:1);
+    sctx.beginPath();
+    sctx.moveTo(cx+Math.cos(ang)*r1,cy+Math.sin(ang)*r1);
+    sctx.lineTo(cx+Math.cos(ang)*r2,cy+Math.sin(ang)*r2); sctx.stroke();
+    if(i%2===0 || i===5){
+      const val=-vmax+2*vmax*i/10;
+      const lr=radius-31;
+      sctx.textAlign='center'; sctx.textBaseline='middle';
+      sctx.fillText(Number(val.toPrecision(3)),cx+Math.cos(ang)*lr,cy+Math.sin(ang)*lr);
+    }
+  }
+
+  // needle: left = negative, centre = zero, right = positive
+  const clipped=Math.max(-vmax,Math.min(vmax,v));
+  const frac=(clipped+vmax)/(2*vmax);
+  const ang=start+(end-start)*frac;
+  sctx.strokeStyle='#1769aa'; sctx.lineWidth=4; sctx.lineCap='round';
+  sctx.beginPath(); sctx.moveTo(cx,cy); sctx.lineTo(cx+Math.cos(ang)*(radius-22),cy+Math.sin(ang)*(radius-22)); sctx.stroke();
+  sctx.fillStyle='#1769aa'; sctx.beginPath(); sctx.arc(cx,cy,7,0,2*Math.PI); sctx.fill();
+
+  document.getElementById('speedreadout').textContent='v = '+v.toFixed(2);
+  document.getElementById('direction').textContent =
+    Math.abs(v)<0.005 ? 'Stationary (instantaneously)' :
+    v<0 ? 'Negative velocity — moving to the left' : 'Positive velocity — moving to the right';
+}
+
+sliders.forEach(s=>s.addEventListener('input',draw));
+tSlider.addEventListener('input',draw);
+window.addEventListener('resize',resize);
+resize();
+</script>
+</body>
+</html>
