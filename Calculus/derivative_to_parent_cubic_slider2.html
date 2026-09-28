@@ -1,0 +1,49 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Derivative to Parent Function Explorer</title>
+<style>*{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;background:#f7f7f7;color:#222}.wrap{max-width:1100px;margin:22px auto;padding:0 18px}h1{font-size:24px;margin:0 0 6px}.intro,.note{color:#555;line-height:1.4}.panel,.card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:15px;margin-bottom:16px}.controls{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}.control label{display:flex;justify-content:space-between;font-weight:700;margin-bottom:7px}.control input{width:100%}.eq{text-align:center;font-size:17px;line-height:1.6}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{padding:10px}.card h2{text-align:center;font-size:17px;margin:3px 0 8px}canvas{display:block;width:100%;height:430px}.note{text-align:center;font-size:13px}@media(max-width:800px){.controls,.grid{grid-template-columns:1fr}canvas{height:390px}}</style></head>
+<body><div class="wrap"><h1>From derivative to parent function</h1><p class="intro">Adjust the three x-intercepts of the cubic derivative. The corresponding quartic parent changes automatically. Both graphs use −10 ≤ x ≤ 10 and automatically scale vertically.</p>
+<div class="panel controls">
+<div class="control"><label><span>Intercept a</span><span id="av">−6.0</span></label><input id="a" type="range" min="-10" max="10" step=".1" value="-6"></div>
+<div class="control"><label><span>Intercept b</span><span id="bv">0.0</span></label><input id="b" type="range" min="-10" max="10" step=".1" value="0"></div>
+<div class="control"><label><span>Intercept c</span><span id="cv">6.0</span></label><input id="c" type="range" min="-10" max="10" step=".1" value="6"></div>
+<div class="control"><label><span>Point x</span><span id="xv">2.0</span></label><input id="xp" type="range" min="-10" max="10" step=".1" value="2"></div></div>
+<div class="panel eq"><div id="deq"></div><div id="peq"></div></div>
+<div class="grid"><div class="card"><h2>Derivative graph, f′(x)</h2><canvas id="dcan"></canvas></div><div class="card"><h2>Parent graph, f(x)</h2><canvas id="fcan"></canvas></div></div>
+<p class="note">The constant of integration is fixed at C = 0. Changing C would only move the parent graph vertically, not change its shape.</p></div>
+<script>
+const A=document.getElementById('a'),B=document.getElementById('b'),C=document.getElementById('c'),XP=document.getElementById('xp'),D=document.getElementById('dcan'),F=document.getElementById('fcan'),dc=D.getContext('2d'),fc=F.getContext('2d');
+function fmt(v){return (Math.abs(v)<1e-8?0:v).toFixed(1).replace('-','−')} function factor(r){if(Math.abs(r)<1e-8)return 'x';return r>0?'(x − '+fmt(r)+')':'(x + '+fmt(-r)+')'}
+function num(v){return Number(Math.abs(v).toFixed(3)).toString()} function term(v,p){if(Math.abs(v)<1e-9)return '';return (v>0?' + ':' − ')+num(v)+(p||'')}
+function nice(x){if(x<=0)return 1;let p=10**Math.floor(Math.log10(x)),n=x/p;return (n<=1?1:n<=2?2:n<=5?5:10)*p}
+function size(c,x){let r=c.getBoundingClientRect(),q=devicePixelRatio||1;c.width=Math.round(r.width*q);c.height=Math.round(r.height*q);x.setTransform(q,0,0,q,0,0)}
+function plot(ctx,can,fn,col,roots,pointX,tangentSlope){
+ let M=0;for(let i=0;i<=1000;i++){let x=-10+20*i/1000;M=Math.max(M,Math.abs(fn(x)))}
+ M=nice(M*1.08||1);let W=can.clientWidth,H=can.clientHeight,L=58,R=18,T=18,BB=42,pw=W-L-R,ph=H-T-BB,X=x=>L+(x+10)/20*pw,Y=y=>T+(M-y)/(2*M)*ph;
+ ctx.clearRect(0,0,W,H);ctx.font='11px Arial';ctx.strokeStyle='#e5e5e5';ctx.fillStyle='#555';
+ for(let x=-10;x<=10;x+=2){let q=X(x);ctx.beginPath();ctx.moveTo(q,T);ctx.lineTo(q,H-BB);ctx.stroke();ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(x,q,H-BB+7)}
+ for(let k=-4;k<=4;k++){let v=M*k/4,q=Y(v);ctx.beginPath();ctx.moveTo(L,q);ctx.lineTo(W-R,q);ctx.stroke();ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(Number(v.toPrecision(3)),L-6,q)}
+ ctx.strokeStyle='#222';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(L,Y(0));ctx.lineTo(W-R,Y(0));ctx.stroke();ctx.beginPath();ctx.moveTo(X(0),T);ctx.lineTo(X(0),H-BB);ctx.stroke();
+ ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();ctx.strokeStyle=col;ctx.lineWidth=3;ctx.beginPath();
+ for(let i=0;i<=1000;i++){let x=-10+20*i/1000,q=X(x),y=Y(fn(x));i?ctx.lineTo(q,y):ctx.moveTo(q,y)}ctx.stroke();
+ if(tangentSlope!==undefined){
+   const y0=fn(pointX),tan=x=>y0+tangentSlope*(x-pointX);
+   ctx.strokeStyle='#8e44ad';ctx.lineWidth=2;ctx.setLineDash([3,6]);ctx.beginPath();ctx.moveTo(X(-10),Y(tan(-10)));ctx.lineTo(X(10),Y(tan(10)));ctx.stroke();ctx.setLineDash([]);
+ }
+ ctx.restore();
+ if(roots){ctx.fillStyle='#c62828';roots.forEach(x=>{ctx.beginPath();ctx.arc(X(x),Y(0),4,0,2*Math.PI);ctx.fill()})}
+ if(pointX!==undefined){
+   ctx.fillStyle='#d7191c';ctx.beginPath();ctx.arc(X(pointX),Y(fn(pointX)),7,0,2*Math.PI);ctx.fill();
+   ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(X(pointX),Y(fn(pointX)),7,0,2*Math.PI);ctx.stroke();
+ }
+}
+function draw(){
+ let a=+A.value,b=+B.value,c=+C.value,xp=+XP.value,su=a+b+c,p=a*b+a*c+b*c,q=a*b*c;
+ av.textContent=fmt(a);bv.textContent=fmt(b);cv.textContent=fmt(c);document.getElementById('xv').textContent=fmt(xp);
+ deq.innerHTML='<b>f′(x)</b> = '+factor(a)+factor(b)+factor(c);
+ peq.innerHTML='<b>f(x)</b> = ¼x⁴'+term(-su/3,'x³')+term(p/2,'x²')+term(-q,'x')+' &nbsp; (C = 0)';
+ let d=x=>(x-a)*(x-b)*(x-c),f=x=>x**4/4-su*x**3/3+p*x*x/2-q*x;
+ const slope=d(xp);
+ plot(dc,D,d,'#1769aa',[a,b,c],xp);
+ plot(fc,F,f,'#8e44ad',null,xp,slope);
+}
+function resize(){size(D,dc);size(F,fc);draw()}[A,B,C,XP].forEach(e=>e.addEventListener('input',draw));window.addEventListener('resize',resize);resize();
+</script></body></html>
